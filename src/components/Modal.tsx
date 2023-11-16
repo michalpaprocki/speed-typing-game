@@ -24,7 +24,7 @@ const Modal = ({ text }: Props) => {
         )
     }
     return (
-        <div onClick={()=>setShow(true)} className='absolute p-1 bg-stone-300 top-0 right-0 m-2 uppercase font-semibold text-sm rounded-sm'>rules</div>
+        <div onClick={()=>setShow(true)} className='absolute p-1 bg-stone-300/25 text-neutral-100 hover:text-neutral-900 hover:bg-stone-300 top-0 right-0 m-2 uppercase font-semibold text-sm rounded-sm'>rules</div>
     )
 
 }
