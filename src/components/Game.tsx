@@ -14,81 +14,112 @@ interface Quote {
 }
 
 const Game = () => {
-   // @ts-ignore
+
    const [sentence, setSentence] = useState<Quote | null>()
    const [keyStrokes, setKeyStrokes] = useState<string[]>([])
    const [completed, setCompleted] = useState({ amount: 0, cumulativeWordsLength: 0 })
-   const [gameStarted, setGameStarted] = useState(false)
-   const [timer, setTimer] = useState({ stop: false, start: false })
+   const [game, setGame] = useState({ started: false, over: false })
+   const [minutes, setMinutes] = useState("1")
+   const [showInfo, setShowInfo] = useState(false)
 
    const fetchSentece = async () => {
       const resp = await fetch(`https://api.quotable.io/random`)
       const quote = await resp.json()
       return quote
    }
-
+   const nextSentence = async () => {
+      if (sentence) {
+         let words = Array.from(sentence.content.split(" "))
+         setCompleted(prev => ({ amount: prev.amount + 1, cumulativeWordsLength: prev.cumulativeWordsLength + words.length }));
+         setKeyStrokes([]);
+         setSentence(await fetchSentece())
+      }
+   }
    const handleKeyDown = (e: KeyboardEvent) => {
 
       if (e.key === "Backspace") {
-
          // @ts-ignore
          setKeyStrokes(prev => prev.filter((p, i) => i !== prev.length - 1))
 
-      } else if (e.key.length <= 1 && e.key.match(/[a-zA-Z0-9]/)) {
-         if (!gameStarted) {
-            setGameStarted(true)
-            setTimer((prev) => ({ ...prev, start: true }))
+      } else if (e.key.length <= 1 && e.key.match(/[a-zA-Z0-9''"!?;: ,.-]/) && !game.over) {
+         e.preventDefault()
+         if (!game.started) {
+            setGame(prev => { return { ...prev, started: true } })
+
          }
          setKeyStrokes(prev => [...prev, e.key])
 
-      } else if (e.key === " ") {
-         if (!gameStarted) {
-            setGameStarted(true)
+      } else if (e.key === " " || e.code === "space" && !game.over) {
+         e.preventDefault()
+         if (!game.started) {
+            setGame(prev => { return { ...prev, started: true } })
          }
          setKeyStrokes(prev => [...prev, " "])
       }
    }
 
    useEffect(() => {
-      if (keyStrokes.toString() === sentence?.content) {
-         console.log('its a match')
-         let words = Array.from(sentence.content.split(" "))
-         setCompleted(prev => ({ amount: prev.amount + 1, cumulativeWordsLength: prev.cumulativeWordsLength + words.length }))
+      if (sentence?.content) {
+         let areEqual = Array.from(sentence?.content).map((k, i) => { if (k !== keyStrokes[i]) { return false } else { return true } })
+
+         areEqual.includes(false) ? null : nextSentence()
+
 
       }
+
    }, [keyStrokes])
-   useEffect(() => {
-      if (gameStarted) {
 
-      }
-   }, [gameStarted])
    useEffect(() => {
+      if (game.over && sentence) {
+         let amountCompleted = keyStrokes.length
+         let words = sentence?.content.slice(0, amountCompleted).split(" ")
+         setCompleted(prev => ({ ...prev, cumulativeWordsLength: prev.cumulativeWordsLength + words?.length }))
+         setShowInfo(true)
+      }
+   }, [game.over])
+   useEffect(() => {
+      console.log(showInfo)
+   }, [showInfo])
+   useEffect(() => {
+      (async () => {
+         setSentence(await fetchSentece())
+      })()
       window.addEventListener('keydown', (e) => handleKeyDown(e))
       return () => {
-         window.removeEventListener('keydown', handleKeyDown)
+         window.removeEventListener('keydown', (e) => handleKeyDown(e))
       }
    }, [])
-
    return (
       <div className="min-h-screen bg-gradient-to-tr from-emerald-950 to-cyan-900 flex flex-col items-center font-mono">
          <Modal text="description of rules" />
+         {showInfo === true ? <div className="p-4 bg-stone-300 shadow-md shadow-black flex flex-col absolute top-[50%]">
+            <span className="p-4 px-8">You managed to:</span>
+            <span>-  reach <b>{completed.cumulativeWordsLength / parseInt(minutes)}</b> words per minute.</span>
+            <span>- complete <b>{completed.amount}</b> quotes.</span>
+            <button className="p-4 mt-12 px-8 hover:text-white hover:bg-black" onClick={() => {
+               setShowInfo(false); nextSentence(); setCompleted({ amount: 0, cumulativeWordsLength: 0 })
+               setGame({ over: false, started: false })
+            }}>OK</button>
+         </div> : <></>}
          <div className="">
-            <h1 className="text-white text-3xl font-semibold py-12">Type Check</h1>
-            <button onClick={async () => setSentence(await fetchSentece())} className="p-2 bg-stone-200 text-base font-bold">get sentence</button>
+            <h1 className="text-white text-3xl font-semibold py-12">Speed Typing</h1>
          </div>
-         <Timer start={timer.start} stop={timer.stop} />
-         <div className="p-8 px-16 bg-stone-300 mt-8 shadow-md shadow-black">
-            <h2>Stats :</h2>
-            <div className="flex flex-col gap-4">
-               <span className="p-1">wordz per minute : {completed.cumulativeWordsLength / 60}</span>
-               <span className="p-1">sentences completed : {completed.amount}</span>
-            </div>
-            <span className="font-bold text-xl p-2 text-white">{ }</span>
-            <div className="p-8 flex flex-col justify-between gap-10">
-               <span className="font-semibold p-2 min-h-[8rem] ring-2 ring-emerald-950">{sentence !== null && sentence !== undefined ? Array.from(sentence.content).map((w, i) => <span key={i} className={``}>{w}</span>) : <></>}
+         <Timer start={game.started} callback={() => { setGame({ over: true, started: false }) }} limit={minutes} />
+         <div className="p-8 px-16 bg-stone-300 mt-8 shadow-md shadow-black min-w-[90%]  md:min-w-[60%]">
+            {keyStrokes.length === 0 ? <h2>Countdown starts whe a key is pressed.</h2> : <></>}
+            <div className="p-2 flex flex-col gap-2">
+               <span onClick={() => console.log(showInfo)}>Minutes : {minutes}</span>
+               <input disabled={game.started ? true : false} type="range" min={1} max={10} value={minutes} onChange={(e) => {
+                  game.started ? null :
+                     setMinutes(e.currentTarget.value)
 
+               }} /></div>
+            <span className="font-bold text-xl p-2 text-white">{ }</span>
+            <div className="p-4 flex flex-col justify-between gap-10">
+               {sentence?.author}
+               <span className="font-semibold p-2 min-h-[8rem] ring-2 ring-emerald-950">{sentence !== null && sentence !== undefined ? Array.from(sentence.content).map((w, i) => <span key={i} className={`bg-blue-400`}>{w}</span>) : <></>}
                </span>
-               <span className="font-semibold p-4 whitespace-pre min-h-[8rem] ring-2 ring-emerald-950">{keyStrokes.map((k, i) => <span className={`whitespace-pre-wrap ${k === sentence?.content[i] ? "bg-emerald-600" : "bg-red-500"} `} key={i}>{k}</span>)}</span>
+               <span className="font-semibold p-2 whitespace-pre min-h-[8rem] ring-2 ring-emerald-950">{game.over=== false&&keyStrokes.map((k, i) => <span className={`whitespace-pre-wrap ${k === sentence?.content[i] ? "bg-emerald-600" : "bg-red-500 text-whitess"} `} key={i}>{k}</span>)}</span>
             </div>
          </div>
       </div>

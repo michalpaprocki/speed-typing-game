@@ -1,38 +1,41 @@
 import { useEffect, useState } from "react"
 
 interface Props {
-    stop: boolean;
-    start: boolean
+    callback: () => void;
+    start: boolean;
+    limit: string;
 }
-const Timer = ({ stop, start }: Props) => {
-    const [time, setTime] = useState(0)
+const Timer = ({ callback, start, limit }: Props) => {
+    const [time, setTime] = useState(parseInt(limit)*60)
     const [intervaleId, setIntervalId] = useState<NodeJS.Timeout>()
 
 
-    const measureTime = () => {
 
-        const id = setInterval(() => setTime(prev => prev += 1), 1000)
+
+    const measureTime = () => {
+        const id = setInterval(() => {
+
+            setTime(prev => prev -= 1)
+        }, 1000);
         setIntervalId(id)
     }
-    const stopMeasureTime = () => {
-        clearInterval(intervaleId)
-        setTime(0)
-    }
+    useEffect(() => {
+        setTime(parseInt(limit)*60)
+    }, [limit])
+
     useEffect(() => {
         if (start) {
             measureTime()
         }
     }, [start])
     useEffect(() => {
-        if (start) {
-            measureTime()
+        if (time === 0) {
+
+            clearInterval(intervaleId)
+            callback()
+            setTime(parseInt(limit)*1)
         }
-    }, [start])
-    useEffect(() => {
-        if (stop) {
-            stopMeasureTime()
-        }
-    }, [stop])
+    }, [time])
     return (
         <span className="p-2 font-bold text-[3rem] text-white">{time}</span>
     )
