@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "vite",
     "tailwind": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
-    "buildcss":"npx tailwindcss -o ./dist/output.css --minify",
-    "build": "tsc && vite build",
+    "build": "npx tailwindcss -o ./dist/output.css --minify && tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
