@@ -33,7 +33,7 @@ const Timer = ({ callback, start, limit }: Props) => {
 
             clearInterval(intervaleId)
             callback()
-            setTime(parseInt(limit)*1)
+            setTime(parseInt(limit)*60)
         }
     }, [time])
     return (

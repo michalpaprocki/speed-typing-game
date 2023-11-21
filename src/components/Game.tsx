@@ -71,10 +71,28 @@ const Game = () => {
 
    useEffect(() => {
       if (game.over && sentence) {
-         let amountCompleted = keyStrokes.length
-         let words = sentence?.content.slice(0, amountCompleted).split(" ")
-         setCompleted(prev => ({ ...prev, cumulativeWordsLength: prev.cumulativeWordsLength + words?.length }))
+
+         let matchedArray:string[] = []
+       
+         for(let i = 0; i< sentence.content.length; i++){
+            if(keyStrokes[i] !== sentence.content[i]){
+            
+               break
+            }
+          
+            matchedArray.push(keyStrokes[i])
+         }
+         if(matchedArray[0]!==""){
+
+       
+         let words = matchedArray.toString().split(" ")
+   
+         setCompleted(prev => ({ ...prev, cumulativeWordsLength: prev.cumulativeWordsLength + words.length }))
+      } else {
+         setCompleted(prev => ({ ...prev, cumulativeWordsLength: prev.cumulativeWordsLength + 0 }))
+      }
          setShowInfo(true)
+
       }
    }, [game.over])
    useEffect(() => {
@@ -88,12 +106,12 @@ const Game = () => {
    }, [])
    return (
       <div className="min-h-screen bg-gradient-to-tr from-emerald-950 to-cyan-900 flex flex-col items-center font-mono">
-         <Modal text="description of rules" />
+         <Modal heading="description of rules" text1={`- Select the amount of time to test your typing speed.`} text2={`- Countedown starts when you press a key.`} text3={`- Try to correctly type in as many quotes as you can within the allocated time frame.`} />
          {showInfo === true ? <div className="p-4 bg-stone-300 shadow-md shadow-black flex flex-col absolute top-[50%]">
             <span className="p-4 px-8">You managed to:</span>
             <span>-  reach <b>{completed.cumulativeWordsLength / parseInt(minutes)}</b> words per minute.</span>
             <span>- complete <b>{completed.amount}</b> quotes.</span>
-            <button className="p-4 mt-12 px-8 hover:text-white hover:bg-black" onClick={() => {
+            <button className="p-4 mt-12 px-8 hover:text-white hover:bg-black font-bold" onClick={() => {
                setShowInfo(false); nextSentence(); setCompleted({ amount: 0, cumulativeWordsLength: 0 })
                setGame({ over: false, started: false })
             }}>OK</button>
@@ -102,11 +120,11 @@ const Game = () => {
             <h1 className="text-white text-3xl font-semibold py-12">Speed Typing</h1>
          </div>
          <Timer start={game.started} callback={() => { setGame({ over: true, started: false }) }} limit={minutes} />
-         <div className="p-8 px-16 bg-stone-300 mt-8 shadow-md shadow-black min-w-[90%]  md:min-w-[60%]">
-            {keyStrokes.length === 0 && !game.started ? <h2>Countdown starts whe a key is pressed.</h2> : <></>}
+         <div className="p-8 px-16 bg-stone-100 mt-8 shadow-md shadow-black min-w-[90%]  md:min-w-[60%]">
+            <h2 className={`${keyStrokes.length === 0 && !game.started ? "visible" : "invisible"}`}>Countdown starts whe a key is pressed.</h2>
             <div className="p-2 flex flex-col gap-2">
                <span>Minutes : {minutes}</span>
-               <input disabled={game.started ? true : false} type="range" min={1} max={10} value={minutes} onChange={(e) => {
+               <input className="p-2 bg-stone-600" disabled={game.started ? true : false} type="range" min={1} max={10} value={minutes} onChange={(e) => {
                   game.started ? null :
                      setMinutes(e.currentTarget.value)
 
@@ -114,9 +132,9 @@ const Game = () => {
             <span className="font-bold text-xl p-2 text-white">{ }</span>
             <div className="p-4 flex flex-col justify-between gap-10">
                {sentence?.author}
-               <span className="font-semibold p-2 min-h-[8rem] ring-2 ring-emerald-950">{sentence !== null && sentence !== undefined ? Array.from(sentence.content).map((w, i) => <span key={i} className={`bg-blue-400`}>{w}</span>) : <></>}
+               <span className="font-semibold p-2 min-h-[8rem] ring-2 ring-emerald-950">{sentence !== null && sentence !== undefined ? Array.from(sentence.content).map((w, i) => <span key={i}>{w}</span>) : <></>}
                </span>
-               <span className="font-semibold p-2 whitespace-pre min-h-[8rem] ring-2 ring-emerald-950">{game.over=== false&&keyStrokes.map((k, i) => <span className={`whitespace-pre-wrap ${k === sentence?.content[i] ? "bg-emerald-600" : "bg-red-500 text-whitess"} `} key={i}>{k}</span>)}</span>
+               <span className="font-semibold p-2 whitespace-pre min-h-[8rem] ring-2 ring-emerald-950">{game.over === false && keyStrokes.map((k, i) => <span className={`whitespace-pre-wrap ${k === sentence?.content[i] ? "bg-emerald-600" : "bg-red-500 text-whitess"} max-w-6xl`} key={i}>{k}</span>)}</span>
             </div>
          </div>
       </div>
