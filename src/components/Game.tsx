@@ -78,9 +78,6 @@ const Game = () => {
       }
    }, [game.over])
    useEffect(() => {
-      console.log(showInfo)
-   }, [showInfo])
-   useEffect(() => {
       (async () => {
          setSentence(await fetchSentece())
       })()
@@ -106,9 +103,9 @@ const Game = () => {
          </div>
          <Timer start={game.started} callback={() => { setGame({ over: true, started: false }) }} limit={minutes} />
          <div className="p-8 px-16 bg-stone-300 mt-8 shadow-md shadow-black min-w-[90%]  md:min-w-[60%]">
-            {keyStrokes.length === 0 ? <h2>Countdown starts whe a key is pressed.</h2> : <></>}
+            {keyStrokes.length === 0 && !game.started ? <h2>Countdown starts whe a key is pressed.</h2> : <></>}
             <div className="p-2 flex flex-col gap-2">
-               <span onClick={() => console.log(showInfo)}>Minutes : {minutes}</span>
+               <span>Minutes : {minutes}</span>
                <input disabled={game.started ? true : false} type="range" min={1} max={10} value={minutes} onChange={(e) => {
                   game.started ? null :
                      setMinutes(e.currentTarget.value)
