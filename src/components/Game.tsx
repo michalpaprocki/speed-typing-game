@@ -15,6 +15,7 @@ interface Quote {
 const Game = () => {
   const [sentence, setSentence] = useState<Quote | null>();
   const [keyStrokes, setKeyStrokes] = useState<string[]>([]);
+  const [apiDown, setApiDown] = useState(false)
   const [completed, setCompleted] = useState({
     amount: 0,
     cumulativeWordsLength: 0,
@@ -24,9 +25,18 @@ const Game = () => {
   const [showInfo, setShowInfo] = useState(false);
 
   const fetchSentece = async () => {
-    const resp = await fetch(`https://api.quotable.io/random`);
-    const quote = await resp.json();
-    return quote;
+    try {
+
+      const resp = await fetch(`https://api.quotable.io/random`, {
+
+      });
+
+      const quote = await resp.json();
+      return quote;
+    } catch (error) {
+      setApiDown(true)
+    }
+
   };
   const nextSentence = async () => {
     if (sentence) {
@@ -116,8 +126,16 @@ const Game = () => {
       window.removeEventListener("keydown", (e) => handleKeyDown(e));
     };
   }, []);
-  return (
-    <div className="min-h-screen bg-gradient-to-tr from-emerald-950 to-cyan-900 flex flex-col items-center font-mono">
+  if(apiDown){
+    return (
+      <div className="min-h-screen bg-gradient-to-tr from-emerald-950 to-cyan-900 flex items-center font-mono h-screen justify-center">
+        <div className="bg-stone-100 p-8">
+          <h1>Error, quotable.io is probably experiencing some kind of problem, check <a className="text-blue-500 hover:text-violet-600" target="_blank" href="https://github.com/lukePeavey/quotable/issues">github</a> for more info</h1>
+        </div>
+      </div>)
+  } else {
+    return (
+      <div className="min-h-screen bg-gradient-to-tr from-emerald-950 to-cyan-900 flex flex-col items-center font-mono">
       <Modal
         heading="description of rules"
         text1={`- Select the amount of time to test your typing speed.`}
@@ -213,6 +231,7 @@ const Game = () => {
       </div>
     </div>
   );
+}
 };
 
 export default Game;
